@@ -1265,6 +1265,11 @@ namespace dxvk {
 
       assert(m_dlfgContext != nullptr);
 
+      // The g-buffer writes screen-space motion in render-resolution pixels.
+      // DLSS Frame Generation expects mvecScale to normalize those values.
+      const VkExtent3D motionVectorExtent = primaryScreenSpaceMotionVector->imageInfo().extent;
+      assert(motionVectorExtent.width != 0 && motionVectorExtent.height != 0);
+
       res = m_dlfgContext->evaluate(Rc<DxvkContext>(ctx.ptr()),
                                                     commandList->getCmdBuffer(),
                                                     outputImage,
@@ -1272,7 +1277,7 @@ namespace dxvk {
                                                     primaryScreenSpaceMotionVector,
                                                     primaryDepth,
                                                     camera,
-                                                    Vector2(1.0f, 1.0f),
+                                                    Vector2(1.0f / motionVectorExtent.width, 1.0f / motionVectorExtent.height),
                                                     interpolatedFrameIndex,
                                                     interpolatedFrameCount,
                                                     resetHistory);
