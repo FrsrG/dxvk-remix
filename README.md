@@ -5,7 +5,7 @@
 [**Download the latest release**](https://github.com/FrsrG/dxvk-remix/releases/latest) · [Install guide](#installation) · [What changed](#why-use-it) · [Source and credits](#source-and-credits)
 
 > [!IMPORTANT]
-> This is a **runtime patch for [GTA IV RTX Remix Compatibility Mod v1.5.2](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2)**, not a standalone GTA IV mod or installer. Install the original compatibility mod first. This fork was tested with **GTA IV: The Complete Edition 1.2.0.59**.
+> This is a **runtime patch for [GTA IV RTX Remix Compatibility Mod v1.5.2](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2)**. The easy setup downloads that original mod and runs its installer when needed. This fork was tested with **GTA IV: The Complete Edition 1.2.0.59**.
 
 ## Why use it?
 
@@ -16,27 +16,30 @@ On the tested RTX 5070 / Ryzen 7 9800X3D setup, this change removed the observed
 ## Download
 
 1. Open the [**latest release**](https://github.com/FrsrG/dxvk-remix/releases/latest).
-2. Under **Assets**, download **GTAIV-RTX-Remix-FG-Shimmer-Fix-1.5.2-r1.zip**.
-3. Use the ZIP asset for installation. GitHub's automatically generated “Source code” ZIP is for developers and does **not** contain the compiled DLL.
+2. Under **Assets**, download **GTAIV-RTX-Remix-FG-Fix-1.5.2-r2.zip**.
+3. Extract the ZIP anywhere outside the game folder and run **Install.cmd**. GitHub's automatically generated “Source code” ZIP is for developers and does **not** contain the compiled DLL.
 
-The release ZIP contains the replacement **.trex/d3d9.dll**, an install note, checksums, and license notices. It is a small patch package, not the full compatibility mod.
+The release ZIP contains the replacement **.trex/d3d9.dll**, a setup script, an automatic restore script, checksums, and license notices. It downloads the original compatibility mod from its official release when needed. You do not need to download or back up the original files manually.
 
 ## Installation
 
-### First-time setup
+### Easy setup
 
-1. Install **GTA IV: The Complete Edition 1.2.0.59**.
-2. Install [**GTA IV RTX Remix Compatibility Mod v1.5.2**](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2) using its installer or manual instructions. Follow its prompts to install the **required base Remix mod**. Its RTX Remix tailored FusionFix is recommended.
-3. If you want **DLSS 5 Neural Rendering**, follow the original mod's instructions for providing **nvngx_dlssnr.dll** yourself. That DLL is not included here.
-4. Launch the game through Steam once to confirm the original mod works, then close it.
+1. Install **GTA IV: The Complete Edition 1.2.0.59** and close the game.
+2. Download the release ZIP above, extract it to a folder such as Downloads, and double-click **Install.cmd**.
+3. Select the game's **GTAIV.exe** when prompted. A typical Steam path is **C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV\GTAIV.exe**.
+4. If the original compatibility mod is not already installed at v1.5.2, setup downloads its official ZIP and installer, verifies their checksums, then opens that installer. Select the **same GTAIV.exe** again, choose a full install if asked, and accept the **required base Remix mod**. Its RTX Remix tailored FusionFix is recommended.
+5. Launch through Steam. In the RTX Remix menu (**Alt+X**), enable Neural Rendering and **2× DLSS Frame Generation**.
 
-### Apply this fork
+If v1.5.2 is already installed, setup only saves the previous runtime and applies this fix; it does not redownload the full mod. The setup script saves the previous runtime automatically, and **Restore.cmd** restores it. No manual backup is needed. The official mod download is about 549 MB; its base Remix mod is downloaded separately by the official installer on a fresh setup.
 
-1. Close GTA IV, the Rockstar launcher, and any RTX Remix bridge process.
-2. Find the folder containing **GTAIV.exe**. A typical Steam path is **C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV**.
-3. Back up **.trex/d3d9.dll** from that folder (for example, copy it to **d3d9.dll.before-fg-fix** somewhere safe).
-4. Extract the release ZIP **into the folder containing GTAIV.exe**. Allow it to replace **.trex/d3d9.dll**.
-5. Launch GTA IV through Steam. In the RTX Remix menu (**Alt+X**), enable Neural Rendering and DLSS Frame Generation at **2×**, then test a moving vehicle.
+For **DLSS 5 Neural Rendering**, follow the [original mod's instructions](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2) to supply **nvngx_dlssnr.dll** yourself. It is not included in this package or downloaded by setup.
+
+The setup script downloads only from the official xoxor4d release, checks the release files against pinned SHA-256 values, and creates a local patched installer ZIP. Its [source](installer/Install.ps1) is available for review.
+
+### Manual install (advanced)
+
+If you prefer to install without the setup script, install the [original v1.5.2 compatibility mod](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2) and its base mod first. Close GTA IV, back up **GTAIV/.trex/d3d9.dll**, then copy **.trex/d3d9.dll** from this release ZIP into the **GTAIV** folder containing **GTAIV.exe**.
 
 > [!CAUTION]
 > Replace **GTAIV/.trex/d3d9.dll** only. **GTAIV/d3d9.dll** next to GTAIV.exe is the 32-bit bridge; this patch does not replace that file.
@@ -53,11 +56,11 @@ The last value means one generated frame between rendered frames, or **2× Frame
 
 ## Undo or update
 
-Close the game and restore your backed-up **.trex/d3d9.dll**. Reinstalling or updating the original compatibility mod may also replace this DLL; reapply a compatible release of this fork afterward. Do not apply this v1.5.2 patch to a different compatibility-mod release without checking compatibility.
+Close the game and run **Restore.cmd** to put back the runtime saved by setup. For a manual install, restore the backup you made yourself. Reinstalling or updating the original compatibility mod may also replace this DLL; reapply a compatible release of this fork afterward. Do not apply this v1.5.2 patch to a different compatibility-mod release without checking compatibility.
 
 ## Troubleshooting
 
-- **Game will not start:** Launch from Steam, confirm that the unmodified v1.5.2 mod works, and check that only **.trex/d3d9.dll** was replaced. Restore your backup if needed.
+- **Game will not start:** Launch from Steam, confirm that the unmodified v1.5.2 mod works, and check that only **.trex/d3d9.dll** was replaced. Run **Restore.cmd** if needed.
 - **Neural Rendering unavailable:** This fork does not supply **nvngx_dlssnr.dll**; see the original mod's v1.5.2 instructions.
 - **Shimmer remains:** Record a short clip of a moving vehicle with Frame Generation on, then briefly off in the same scene. Include your GPU, resolution, DLSS mode, and mod version in an issue. This distinguishes Frame Generation artifacts from artifacts already present in rendered frames.
 - **Low native FPS:** Frame Generation raises displayed FPS but cannot make the underlying renderer faster. The [compatibility mod's wiki](https://github.com/xoxor4d/gta4-rtx/wiki/Troubleshooting---Guides) covers game-specific performance and stutter options.
