@@ -29,11 +29,12 @@ The release ZIP contains the replacement **.trex/d3d9.dll**, a setup script, an 
 2. Download the release ZIP above, extract it to a folder such as Downloads, and double-click **Install.cmd**.
 3. Select the game's **GTAIV.exe** when prompted. A typical Steam path is **C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV\GTAIV.exe**.
 4. If the original compatibility mod is not already installed at v1.5.2, setup downloads its official ZIP and installer, verifies their checksums, then opens that installer. Select the **same GTAIV.exe** again, choose a full install if asked, and accept the **required base Remix mod**. Its RTX Remix tailored FusionFix is recommended.
-5. Launch through Steam. In the RTX Remix menu (**Alt+X**), enable Neural Rendering and **2× DLSS Frame Generation**.
+5. To use **DLSS 5 Neural Rendering**, supply **nvngx_dlssnr.dll** yourself as described by the [original mod](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2). After setup finishes, copy the DLL into the **.trex** folder inside your **GTAIV** game folder, so its path is **GTAIV/.trex/nvngx_dlssnr.dll**. For the typical Steam install, that is **C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV\.trex\nvngx_dlssnr.dll**. Do not put it beside **GTAIV.exe** or in the folder where you extracted this release ZIP.
+6. Launch through Steam. In the RTX Remix menu (**Alt+X**), enable Neural Rendering and **2× DLSS Frame Generation**.
 
 If v1.5.2 is already installed, setup only saves the previous runtime and applies this fix; it does not redownload the full mod. The setup script saves the previous runtime automatically, and **Restore.cmd** restores it. No manual backup is needed. The official mod download is about 549 MB; its base Remix mod is downloaded separately by the official installer on a fresh setup.
 
-For **DLSS 5 Neural Rendering**, follow the [original mod's instructions](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2) to supply **nvngx_dlssnr.dll** yourself. It is not included in this package or downloaded by setup.
+**nvngx_dlssnr.dll** is not included in this package or downloaded by setup.
 
 The setup script downloads only from the official xoxor4d release, checks the release files against pinned SHA-256 values, and creates a local patched installer ZIP. Its [source](installer/Install.ps1) is available for review.
 
@@ -61,7 +62,7 @@ Close the game and run **Restore.cmd** to put back the runtime saved by setup. F
 ## Troubleshooting
 
 - **Game will not start:** Launch from Steam, confirm that the unmodified v1.5.2 mod works, and check that only **.trex/d3d9.dll** was replaced. Run **Restore.cmd** if needed.
-- **Neural Rendering unavailable:** This fork does not supply **nvngx_dlssnr.dll**; see the original mod's v1.5.2 instructions.
+- **Neural Rendering unavailable:** Confirm your supplied DLL is at **GTAIV/.trex/nvngx_dlssnr.dll**, then check the original mod's v1.5.2 instructions.
 - **Shimmer remains:** Record a short clip of a moving vehicle with Frame Generation on, then briefly off in the same scene. Include your GPU, resolution, DLSS mode, and mod version in an issue. This distinguishes Frame Generation artifacts from artifacts already present in rendered frames.
 - **Low native FPS:** Frame Generation raises displayed FPS but cannot make the underlying renderer faster. The [compatibility mod's wiki](https://github.com/xoxor4d/gta4-rtx/wiki/Troubleshooting---Guides) covers game-specific performance and stutter options.
 
