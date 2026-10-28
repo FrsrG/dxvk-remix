@@ -1,271 +1,77 @@
-# Remix Plus
+# GTA IV RTX Remix: DLSS Frame Generation shimmer fix
 
-[![Build Status](https://github.com/RemixProjGroup/dxvk-remix/actions/workflows/build.yml/badge.svg)](https://github.com/RemixProjGroup/dxvk-remix/actions/workflows/build.yml)
+**A GTA IV focused fork of the RTX Remix runtime for smoother looking DLSS 5 Neural Rendering and 2× Frame Generation.**
 
-**Remix Plus** is a community-maintained fork of NVIDIA's
-[`dxvk-remix`](https://github.com/NVIDIAGameWorks/dxvk-remix) — created
-and led by [Kim2091](https://github.com/Kim2091) — that extends the
-Remix SDK API for modern-game plugin integrations. It
-brings the SDK extensions developed in the gmod-rtx community fork —
-batched mesh and light creation, plugin-injected game state, UI state
-plumbing, VRAM control, additional tonemap operators, the Numos
-sky system, and more — onto a clean, NVIDIA-rebase-friendly
-base, so plugin authors and game integrations can build on a
-maintained codebase that's API-compatible with the broader Remix
-ecosystem.
+[**Download the latest release**](https://github.com/FrsrG/dxvk-remix/releases/latest) · [Install guide](#installation) · [What changed](#why-use-it) · [Source and credits](#source-and-credits)
 
-Like upstream `dxvk-remix`, Remix Plus is a fork of
-[DXVK](https://github.com/doitsujin/dxvk) that overhauls the D3D9
-fixed-function pipeline for path-traced remastering. The `bridge`
-subfolder enables 32-bit games to communicate with the 64-bit
-runtime.
+> [!IMPORTANT]
+> This is a **runtime patch for [GTA IV RTX Remix Compatibility Mod v1.5.2](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2)**, not a standalone GTA IV mod or installer. Install the original compatibility mod first. This fork was tested with **GTA IV: The Complete Edition 1.2.0.59**.
 
-> Bugs encountered with Remix Plus belong in this repo's issue
-> tracker, not in upstream DXVK or NVIDIA `dxvk-remix`.
+## Why use it?
 
-## What's new vs upstream `dxvk-remix`
+GTA IV with RTX Remix can render at a low base frame rate, making DLSS Frame Generation useful for smoother displayed motion. In the GTA IV runtime, the ray-traced motion buffer contains **pixel-space** motion vectors, but the DLSS Frame Generation call was passing a scale of 1 for each axis. This fork passes the reciprocal motion-buffer dimensions, as required for pixel-space vectors by [NVIDIA's DLSS-G integration guide](https://github.com/NVIDIA-RTX/Streamline/blob/main/docs/ProgrammingGuideDLSS_G.md#70-provide-common-constants).
 
-### Remix SDK API extensions
+On the tested RTX 5070 / Ryzen 7 9800X3D setup, this change removed the observed moving-vehicle shimmer with **DLSS 5 Neural Rendering and 2× Frame Generation enabled**. The change improves Frame Generation input quality; **it does not increase the game's native rendered FPS**, and other hardware or scenes may behave differently.
 
-- **Batched mesh creation** — `CreateMeshBatched` for high-throughput
-  geometry submission paths.
-- **Batched light creation + deferred updates** — `CreateLightBatched`,
-  `UpdateLightDefinition` for per-frame light churn.
-- **UI state query/set** — `GetUIState` / `SetUIState` so plugins can
-  observe and drive Remix's developer UI from outside the runtime.
-- **Texture-hash category mutation** — `AddTextureHash`,
-  `RemoveTextureHash`, `dxvk_GetTextureHash` for plugin-driven texture
-  classification at runtime.
-- **D3D11 shared-texture handles** — `dxvk_GetSharedD3D11TextureHandle`
-  for interop with D3D11-side rendering paths.
-- **VRAM control** — `RequestTextureVramFree`, `RequestVramCompaction`,
-  `GetVramStats` give plugins a driver-view handle on memory pressure.
-- **Plugin-injected game state** — `SetGameValue` writes named values
-  into a fork-owned store; `GameValueReadBool` and `GameValueReadNumber`
-  graph (Sense) components read them back inside replacement logic.
-- **`externalMesh` field** on `RasterGeometry` for capture/replacement
-  parity when geometry comes in via the Remix API path.
-- **`InstanceCategoryBit` ABI** synced to the gmod/plugin layout so
-  category bits round-trip correctly across the API boundary.
+## Download
 
-### Tonemapping & auto-exposure
+1. Open the [**latest release**](https://github.com/FrsrG/dxvk-remix/releases/latest).
+2. Under **Assets**, download **GTAIV-RTX-Remix-FG-Shimmer-Fix-1.5.2-r1.zip**.
+3. Use the ZIP asset for installation. GitHub's automatically generated “Source code” ZIP is for developers and does **not** contain the compiled DLL.
 
-- **Eight tonemap operators** in the UI dropdown: Hill ACES, Narkowicz
-  ACES, Hable Filmic, AgX Minimal, Lottes 2016, PsychoV17_Beta, Gran
-  Turismo 7 (SDR), and Neutwo. Each operator has its own parameter
-  panel — controls are visible at a glance instead of buried.
-- **AgX Minimal** (Benjamin Wrensch / MIT) replaces the older
-  multi-knob AgX surface. Look presets: None / Golden / Punchy.
-- **PsychoV17_Beta** — Slang port of renodx Psycho Test 17 (Carlos
-  Lopez Jr. / MIT). Stockman-Sharpe LMS + Naka-Rushton cone response
-  + gamut compression.
-- **Gran Turismo 7 reference** — Slang port of Polyphony Digital's
-  SIGGRAPH 2025 GT7 tone-mapping reference (MIT). SDR mode, ICtCp UCS.
-- **Hable presets** (Hejl, Uncharted 2) with the original parameters.
-- **Perceptual auto-exposure** — Stockman-Sharpe Yf histogram +
-  geometric-mean adaptation + first-site cone-contrast law. Asymmetric
-  in log-exposure space: cone-bleach is fast (~0.10–0.20 s),
-  rod-recovery is slow (~0.50–1.50 s). Two tau sliders replace the old
-  Adaptation Speed / EV-Min / EV-Max / Average Mode controls.
+The release ZIP contains the replacement **.trex/d3d9.dll**, an install note, checksums, and license notices. It is a small patch package, not the full compatibility mod.
 
-The legacy Tonemapping Mode (Global / Local / Direct) combo, the local
-tonemapper, the dynamic tone curve / Tuning Mode sliders, the User
-Brightness slider, and the exposure-compensation curve are removed —
-the apply pass always runs in operator-only mode.
+## Installation
 
-### Numos sky system
+### First-time setup
 
-- **Numos atmosphere (Hillaire scattering)** — physically-based atmospheric scattering
-  ported from the gmod-rtx community fork. Daylight, sunset, and
-  twilight all behave correctly without manual fog tuning.
-- **Volumetric clouds** — procedural FBM cloud layer with
-  weather-driven coverage and Nubis-style spatial variation. Anvil,
-  shear, and vertical-profile shaping are artist-tunable. Renders
-  through a sky-dome curvature with sample-seam jitter to hide
-  stepping artifacts. Sun and any number of moons cast shadows
-  through the volume; twilight and night cloud lighting are
-  physically correct rather than tuned-by-eye. Shadow-tap cost is
-  heavily reduced via multi-octave density approximation,
-  cadence-decoupled shadow caching, combined-moon marching, and
-  density-gated skipping.
-- **Night sky** — stars, milky way, shooting stars, and airglow,
-  with sidereal rotation so the celestial sphere actually moves.
-  Multi-moon support: independent elevation / rotation / phase per
-  moon, unified moon-disk eval with surface-style presets (Rocky,
-  Volcanic), soft radial glow/halo, and physically-scaled lunar
-  illumination on the cloud volume.
+1. Install **GTA IV: The Complete Edition 1.2.0.59**.
+2. Install [**GTA IV RTX Remix Compatibility Mod v1.5.2**](https://github.com/xoxor4d/gta4-rtx/releases/tag/v1.5.2) using its installer or manual instructions. Follow its prompts to install the **required base Remix mod**. Its RTX Remix tailored FusionFix is recommended.
+3. If you want **DLSS 5 Neural Rendering**, follow the original mod's instructions for providing **nvngx_dlssnr.dll** yourself. That DLL is not included here.
+4. Launch the game through Steam once to confirm the original mod works, then close it.
 
-### Hardware skinning
+### Apply this fork
 
-- **HW skinning** with capture and replacement parity, so skinned
-  meshes injected via the Remix API path participate in capture and
-  asset replacement the same as fixed-pipeline geometry.
+1. Close GTA IV, the Rockstar launcher, and any RTX Remix bridge process.
+2. Find the folder containing **GTAIV.exe**. A typical Steam path is **C:\Program Files (x86)\Steam\steamapps\common\Grand Theft Auto IV\GTAIV**.
+3. Back up **.trex/d3d9.dll** from that folder (for example, copy it to **d3d9.dll.before-fg-fix** somewhere safe).
+4. Extract the release ZIP **into the folder containing GTAIV.exe**. Allow it to replace **.trex/d3d9.dll**.
+5. Launch GTA IV through Steam. In the RTX Remix menu (**Alt+X**), enable Neural Rendering and DLSS Frame Generation at **2×**, then test a moving vehicle.
 
-### Capture and overlay quality-of-life
+> [!CAUTION]
+> Replace **GTAIV/.trex/d3d9.dll** only. **GTAIV/d3d9.dll** next to GTAIV.exe is the 32-bit bridge; this patch does not replace that file.
 
-- **Overwrite-existing-capture** checkbox in the capture dialog.
-- **Null-image / null-map / dimension guards** on capture export
-  paths — eliminates a class of crashes when capturing edge-case
-  resources.
-- **Keyboard and mouse events** forwarded to ImGui on the legacy
-  `WndProc` fallback path, so plugin-API-driven overlays receive
-  input even when a game menu captures raw input.
-- **Quieter logs** — spammy swapchain-recreate throws and repeated
-  mesh-registration warnings silenced.
+For users who set options in **user.conf**, the relevant values are:
 
-### Engineering
+~~~ini
+rtx.neuralUplift.enable = True
+rtx.dlfg.enable = True
+rtx.dlfg.maxInterpolatedFrames = 1
+~~~
 
-- **Fork-touchpoint pattern** — fork logic is extracted into
-  dedicated `rtx_fork_*.cpp` modules, with one-line dispatches in
-  upstream files. Reduces NVIDIA-rebase pain by ~54% (measured) and
-  makes the fork's surface area auditable. See
-  [`docs/fork-touchpoints.md`](docs/fork-touchpoints.md) for the
-  authoritative inventory.
-- **PR template fridge-list reminder** keeps the discipline honest.
+The last value means one generated frame between rendered frames, or **2× Frame Generation**. Keep your existing graphics choices; these lines are not a performance preset.
 
-## Contributing
+## Undo or update
 
-Contributions are welcome. Whether you write Remix plugins, ship a
-game integration, or want to make this fork better — start with the
-contribution guide:
+Close the game and restore your backed-up **.trex/d3d9.dll**. Reinstalling or updating the original compatibility mod may also replace this DLL; reapply a compatible release of this fork afterward. Do not apply this v1.5.2 patch to a different compatibility-mod release without checking compatibility.
 
-**[`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)** covers setup,
-build, fork-touchpoint discipline, code style, and PR submission.
+## Troubleshooting
 
-The short version:
+- **Game will not start:** Launch from Steam, confirm that the unmodified v1.5.2 mod works, and check that only **.trex/d3d9.dll** was replaced. Restore your backup if needed.
+- **Neural Rendering unavailable:** This fork does not supply **nvngx_dlssnr.dll**; see the original mod's v1.5.2 instructions.
+- **Shimmer remains:** Record a short clip of a moving vehicle with Frame Generation on, then briefly off in the same scene. Include your GPU, resolution, DLSS mode, and mod version in an issue. This distinguishes Frame Generation artifacts from artifacts already present in rendered frames.
+- **Low native FPS:** Frame Generation raises displayed FPS but cannot make the underlying renderer faster. The [compatibility mod's wiki](https://github.com/xoxor4d/gta4-rtx/wiki/Troubleshooting---Guides) covers game-specific performance and stutter options.
 
-1. Fork [`RemixProjGroup/dxvk-remix`](https://github.com/RemixProjGroup/dxvk-remix).
-2. Branch on your fork — any name is fine.
-3. Keep PRs small and focused.
-4. Build clean (release flavor, exit code 0, zero errors).
-5. Open a PR against canonical's `main` branch.
-6. Add yourself to `src/dxvk/imgui/dxvk_imgui_about.cpp` under
-   "Github Contributors".
+## Source and credits
 
-### Requirements:
-1. Windows 10 or 11
-2. [Git](https://git-scm.com/download/win)
-3. [Visual Studio ](https://visualstudio.microsoft.com/vs/older-downloads/)
-    - VS 2019 is tested
-    - VS 2022 may also work, but it is not actively tested
-    - Note that our build system will always use the most recent version available on the system
-4. [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/)
-    - 10.0.19041.0 is tested
-5. [Meson](https://mesonbuild.com/)
-    - 1.8.2 has been tested
-    - Follow [instructions](https://mesonbuild.com/SimpleStart.html#installing-meson) on how to install and reboot the PC before moving on (Meson will indicate as much)
-6. [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows)
-    - 1.4.313.2 or newer
-    - You may need to uninstall previous SDK if you have an old version
-7. [Python](https://www.python.org/downloads/)
-    - 3.9 or newer
-    - Ensure you are using python installed from the link above and not from the Microsoft Store
-    - Python is required by developer build tooling; the packaged RTX Remix Runtime does not link against Python.
-8. [DirectX Runtime](https://www.microsoft.com/en-us/download/details.aspx?id=35)
-    - Latest version should work.
-    - This includes d3d9x*.dll which are required to run the game
-    - May already be installed if you have D3D9 games installed
+The change is in [**rtx_dlfg.cpp**](https://github.com/FrsrG/dxvk-remix/blob/fix/dlfg-motion-vector-scale-gta4-1.5.2/src/dxvk/rtx_render/rtx_dlfg.cpp). The release is built from the GTA IV runtime source matching the compatibility mod's v1.5.2 build, with this targeted motion-vector correction.
 
-#### Additional notes:
-- If dependency paths change (for example, after installing a new Vulkan SDK), reconfigure the affected build from the repository root, such as `meson setup --reconfigure _Comp64Release`.
+This project is a fork of [xoxor4d/dxvk-remix](https://github.com/xoxor4d/dxvk-remix), which includes work from [Remix Plus](https://github.com/RemixProjGroup/dxvk-remix) and [NVIDIA RTX Remix](https://github.com/NVIDIAGameWorks/dxvk-remix). The GTA IV integration, assets, and installer come from [xoxor4d/gta4-rtx](https://github.com/xoxor4d/gta4-rtx) and its credited contributors. This fork is not an official NVIDIA or gta4-rtx release. Source license and third-party notices are included in the repository and release package.
 
-## Quick build
+Developers can clone this branch with submodules:
 
-Detailed requirements and walkthrough live in
-[`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md). The compressed
-version, assuming you have Visual Studio 2019 (with the v142
-toolchain), the Windows SDK, Meson 1.8.2+, the Vulkan SDK
-1.4.313.2+, and Python 3.9+:
+~~~powershell
+git clone --recurse-submodules --branch fix/dlfg-motion-vector-scale-gta4-1.5.2 https://github.com/FrsrG/dxvk-remix.git
+~~~
 
-```powershell
-git clone --recursive https://github.com/<your-fork>/dxvk-remix.git
-cd dxvk-remix
-.\scripts\build.ps1
-```
-
-3. Make sure PowerShell scripts are enabled
-    - One-time system setup: run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned` in an elevated PowerShell prompt, then close and reopen any existing PowerShell prompts
-	
-4. To generate and build dxvk-remix project:
-    - Right Click on `dxvk-remix\build_dxvk_all_ninja.ps1` and select "Run with Powershell"
-    - If that fails or has problems, run the build manually in a way you can read the errors:
-        - open a windows file explorer to the `dxvk-remix` folder
-        - remove only the generated configuration that failed, such as `_Comp64Debug/`; remove `_vs/` as well only if the generated Visual Studio solution must be recreated
-        - type `cmd` in the address bar to open a command line window in that folder.
-        - copy and paste `powershell -command "& .\build_dxvk_all_ninja.ps1"` into the command line, then press enter
-    - Optional flags:
-        - `-SkipApics` — skip downloading game test captures (requires auth token)
-    - Examples:
-        ```powershell
-        .\build_dxvk_all_ninja.ps1
-        .\build_dxvk_all_ninja.ps1 -SkipApics
-        ```
-    - This will build all 3 configurations of dxvk-remix project inside subdirectories of the build tree:
-        - **_Comp64Debug** - full debug instrumentation, runtime speed may be slow
-        - **_Comp64DebugOptimized** - partial debug instrumentation (i.e. asserts), runtime speed is generally comparable to that of release configuration
-        - **_Comp64Release** - fastest runtime
-    - This will generate a project in the **_vs** subdirectory
-    - This script builds the officially supported x64 targets. ARM64 and ARM64EC configurations are compile-tested in CI but are not part of this local build workflow.
-
-To build the 32-bit-to-64-bit bridge separately, use the fork-side
-bridge wrapper `.\bridge\scripts\build.ps1` (builds the x64 server
-and x86 client + launcher into `bridge/_output/`).
-
-## Remix API
-
-If you're integrating Remix into a game with available source, you
-can either use the D3D9 surface directly (Remix's `d3d9.dll`
-implements D3D9) or program against the Remix C API to push game
-data into the renderer. Start with
-[`docs/RemixSDK.md`](docs/RemixSDK.md) for setup and the mental
-model, then see [`docs/RemixApi.md`](docs/RemixApi.md) for the full
-API reference. The C header is
-[`public/include/remix/remix_c.h`](public/include/remix/remix_c.h),
-with a type-safe C++ wrapper at
-[`public/include/remix/remix.h`](public/include/remix/remix.h).
-
-3. Reconfigure and rebuild each configuration you use so Meson reloads **gametargets.conf**. For example:
-    ```powershell
-    meson setup --reconfigure _Comp64Release
-    meson compile -C _Comp64Release
-    ```
-    The build deploys binaries to the game directories specified in **gametargets.conf**.
-
-- [Anti-Culling System](docs/AntiCullingSystem.md)
-- [Cloud System](docs/CloudSystem.md)
-- [Contributing Guide](docs/CONTRIBUTING.md)
-- [Contributing Style Guide](docs/CONTRIBUTING-style-guide.md)
-- [Foliage System](docs/FoliageSystem.md)
-- [Fork Touchpoints](docs/fork-touchpoints.md)
-- [GPU Print](docs/GpuPrint.md)
-- [Opacity Micromap](docs/OpacityMicromap.md)
-- [Remix API (hub reference)](docs/RemixApi.md)
-- [Remix API Changelog](docs/RemixApiChangelog.md)
-- [Remix API Surface (auto-generated)](RemixApiSurface.md)
-- [Remix Config](docs/RemixConfig.md)
-- [Remix Logic](docs/RemixLogic.md)
-- [Remix SDK Setup](docs/RemixSDK.md)
-- [Remix Sky API](docs/RemixSkyAPI.md)
-- [Rtx Options](RtxOptions.md)
-- [Terrain System](docs/TerrainSystem.md)
-- [Unit Test](docs/UnitTest.md)
-
-## Team
-
-- [Kim2091](https://github.com/Kim2091) — project lead and lead maintainer
-- [CR](https://github.com/sambow23) — maintainer
-- [TheGreatHMMMM](https://github.com/TheGreatHMMMM) — contributor
-- [Gokuwashere](https://github.com/BrunchyChineapple) — contributor
-
-## Credits
-
-Remix Plus stands on the work of:
-
-- [DXVK](https://github.com/doitsujin/dxvk) — D3D9 → Vulkan
-  translation layer.
-- [NVIDIA `dxvk-remix`](https://github.com/NVIDIAGameWorks/dxvk-remix) —
-  path-traced remastering fork of DXVK.
-- The **gmod-rtx community fork** — origin of most of the SDK
-  extensions Remix Plus carries.
-
-Thanks to all the contributors whose work makes this possible.
+See [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) and the [Windows build workflow](.github/workflows/build.yml) for build details.
